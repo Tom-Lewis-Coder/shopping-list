@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface Item {
     id: number;
@@ -63,6 +64,14 @@ const ShoppingList = () => {
         setItems(items.filter(item => item.id !== id));
     };
 
+    const handleDragEnd = (result: DropResult) => {
+        if (!result.destination) return;
+        const reorderedItems = Array.from(items);
+        const [removed] = reorderedItems.splice(result.source.index, 1);
+        reorderedItems.splice(result.destination.index, 0, removed);
+        setItems(reorderedItems);
+    };
+
     if (!isLoggedIn) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-300">
@@ -99,7 +108,7 @@ const ShoppingList = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-8">
+        <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-gray-100">
             <h2 className="text-3xl font-bold text-blue-700 mb-6">Shopping List</h2>
 
             <button
@@ -109,44 +118,65 @@ const ShoppingList = () => {
                 Logout
             </button>
 
-            <ul className="w-full max-w-md space-y-2 ">
-                {items.map((item, index) => (
-                    <li
-                        key={item.id}
-                        className="flex justify-between items-center bg-white p-3 rounded shadow"
-                    >
-                        <input
-                            type="checkbox"
-                            checked={item.isBought}
-                            onChange={() => toggleBoughtItem(item.id)}
-                            className="mr-2"
-                        />
-                        <span
-                            className={`flex-grow ${item.isBought ? 'line-through text-gray-400' : ''}`}
+            <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="droppable">
+                    {provided => (
+                        <ul
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="w-full max-w-md"
                         >
-                            {item.name} - £{item.price.toFixed(2)}
-                        </span>
-
-                        <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition mr-2"
-                        >
-                            Delete
-                        </button>
-                    </li>
-                ))}
-            </ul>
+                            {items.map((item, index) => (
+                                <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={index}>
+                                    {provided => (
+                                        <li
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            className="flex justify-between items-center bg-white p-3 mb-2 rounded shadow hover:shadow-md transition"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={item.isBought}
+                                                onChange={() => toggleBoughtItem(item.id)}
+                                                className="mr-2"
+                                            />
+                                            <span
+                                                className={`flex-grow ${item.isBought ? 'line-through text-gray-400' : ''}`}
+                                            >
+                                                {item.name} - £{item.price.toFixed(2)}
+                                            </span>
+                                            <button
+                                                onClick={() => handleDeleteItem(item.id)}
+                                                className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition mr-2"
+                                            >
+                                                Delete
+                                            </button>
+                                            <span
+                                                {...provided.dragHandleProps}
+                                                className="cursor-grab text-gray-500"
+                                            >
+                                                ⠿
+                                            </span>
+                                        </li>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </ul>
+                    )}
+                </Droppable>
+            </DragDropContext>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-2 w-full max-w-md">
                 <input
-                    className="flex-grow border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="flex-grow border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     type="text"
                     value={newItem.name}
                     onChange={e => setNewItem({ ...newItem, name: e.target.value })}
                     placeholder="New Item Name"
                 />
                 <input
-                    className="w-24 border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-24 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     type="text"
                     value={newItem.price}
                     onChange={e => {
