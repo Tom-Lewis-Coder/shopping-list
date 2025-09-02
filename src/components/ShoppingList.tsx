@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Item {
     id: number;
@@ -7,16 +7,12 @@ interface Item {
     isBought: boolean;
 }
 
-const itemList = [
-    { id: 1, name: 'Milk', price: 1, isBought: false },
-    { id: 2, name: 'Bread', price: 1.5, isBought: false,  },
-    { id: 3, name: 'Eggs', price: 2, isBought: false },
-    { id: 4, name: 'Cheese', price: 3, isBought: false }
-]
-
-
 const ShoppingList = () => {
-    const [items, setItems] = useState<Item[]>(itemList);
+    const [items, setItems] = useState<Item[]>(() => {
+        const saved = localStorage.getItem('itemData');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [newItem, setNewItem] = useState({ name: '', price: '' });
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
         return localStorage.getItem('isLoggedIn') === 'true';
     });
@@ -40,10 +36,31 @@ const ShoppingList = () => {
         localStorage.removeItem('isLoggedIn');
     };
 
+    useEffect(() => {
+        localStorage.setItem('itemData', JSON.stringify(items));
+    }, [items]);
+
     const toggleBoughtItem = (id: number) => {
         setItems(items.map(item =>
             item.id === id ? { ...item, isBought: !item.isBought } : item
         ));
+    };
+
+    const handleAddItem = () => {
+        if (!newItem.name.trim() || !newItem.price.trim()) return;
+        if (items.find(item => item.name.toLowerCase() === newItem.name.toLowerCase())) {
+            alert('Item already exists');
+            return;
+        }
+        setItems([
+            ...items,
+            { id: Date.now(), name: newItem.name, price: parseFloat(newItem.price), isBought: false }
+        ]);
+        setNewItem({ name: '', price: '' });
+    };
+
+    const handleDeleteItem = (id: number) => {
+        setItems(items.filter(item => item.id !== id));
     };
 
     if (!isLoggedIn) {
@@ -96,7 +113,7 @@ const ShoppingList = () => {
                 {items.map((item, index) => (
                     <li
                         key={item.id}
-                        className="flex justify-between bg-white p-3 rounded shadow"
+                        className="flex justify-between items-center bg-white p-3 rounded shadow"
                     >
                         <input
                             type="checkbox"
@@ -109,9 +126,44 @@ const ShoppingList = () => {
                         >
                             {item.name} - £{item.price.toFixed(2)}
                         </span>
+
+                        <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition mr-2"
+                        >
+                            Delete
+                        </button>
                     </li>
                 ))}
             </ul>
+
+            <div className="mt-6 flex flex-col sm:flex-row gap-2 w-full max-w-md">
+                <input
+                    className="flex-grow border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    type="text"
+                    value={newItem.name}
+                    onChange={e => setNewItem({ ...newItem, name: e.target.value })}
+                    placeholder="New Item Name"
+                />
+                <input
+                    className="w-24 border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    type="text"
+                    value={newItem.price}
+                    onChange={e => {
+                        const value = e.target.value;
+                        if (/^\d*\.?\d*$/.test(value)) {
+                            setNewItem({ ...newItem, price: value });
+                        }
+                    }}
+                    placeholder="Price"
+                />
+                <button
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                    onClick={handleAddItem}
+                >
+                    Add
+                </button>
+            </div>
         </div>
     );
 };
