@@ -14,6 +14,10 @@ const ShoppingList = () => {
         return saved ? JSON.parse(saved) : [];
     });
     const [newItem, setNewItem] = useState({ name: '', price: '' });
+        const [spendLimit, setSpendLimit] = useState<number>(() => {
+        const saved = localStorage.getItem('spendLimit');
+        return saved ? JSON.parse(saved) : 0;
+    });
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
         return localStorage.getItem('isLoggedIn') === 'true';
     });
@@ -74,6 +78,11 @@ const ShoppingList = () => {
 
     const total = items.reduce((acc, item) => acc + item.price, 0);
 
+    useEffect(() => {
+        localStorage.setItem('spendLimit', JSON.stringify(spendLimit));
+    }, [spendLimit]);
+    
+
     if (!isLoggedIn) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-300">
@@ -115,10 +124,27 @@ const ShoppingList = () => {
 
             <button
                 onClick={handleLogout}
-                className="self-end mb-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+                className="self-end mb-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition absolute top-10"
             >
                 Logout
             </button>
+
+            <div className="mb-4 flex items-center gap-2">
+                <label className="font-semibold">Budget:
+                    <input
+                        className="border border-gray-300 rounded ml-2 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        type="text"
+                        value={spendLimit}
+                        onChange={e => {
+                            const value = e.target.value;
+                            if (/^\d*\.?\d*$/.test(value)) {
+                                setSpendLimit(Number(value));
+                            }
+                        }}
+                        placeholder="Enter limit"
+                    />
+                </label>
+            </div>
 
             <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable droppableId="droppable">
@@ -170,6 +196,9 @@ const ShoppingList = () => {
             </DragDropContext>
 
             <p className="mt-4 text-lg font-semibold">Total: £{total.toFixed(2)}</p>
+            {spendLimit > 0 && total > spendLimit && (
+                <p className="text-red-600 font-bold">Total exceeds your budget</p>
+            )}
 
             <div className="mt-6 flex flex-col sm:flex-row gap-2 w-full max-w-md">
                 <input
