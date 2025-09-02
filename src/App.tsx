@@ -1,7 +1,8 @@
 import React from 'react';
+import ShoppingList from './components/ShoppingList';
 
 function App() {
-  return <div>Hello world</div>;
+  return <ShoppingList/>;
 }
 
 export default App;
