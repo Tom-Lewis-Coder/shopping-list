@@ -14,7 +14,7 @@ const ShoppingList = () => {
         return saved ? JSON.parse(saved) : [];
     });
     const [newItem, setNewItem] = useState({ name: '', price: '' });
-        const [spendLimit, setSpendLimit] = useState<number>(() => {
+    const [spendLimit, setSpendLimit] = useState<number>(() => {
         const saved = localStorage.getItem('spendLimit');
         return saved ? JSON.parse(saved) : 0;
     });
@@ -81,7 +81,14 @@ const ShoppingList = () => {
     useEffect(() => {
         localStorage.setItem('spendLimit', JSON.stringify(spendLimit));
     }, [spendLimit]);
-    
+
+    const handleShare = () => {
+        const body = items
+            .map(i => `${i.name} - £${i.price.toFixed(2)} ${i.isBought ? '(bought)' : ''}`)
+            .join('\n');
+        window.location.href = `mailto:?subject=My Shopping List&body=${encodeURIComponent(body)}`;
+    };
+
 
     if (!isLoggedIn) {
         return (
@@ -227,6 +234,13 @@ const ShoppingList = () => {
                     Add
                 </button>
             </div>
+
+             <button
+                className="mt-4 bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition"
+                onClick={handleShare}
+            >
+                Share via Email
+            </button>
         </div>
     );
 };
