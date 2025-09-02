@@ -11,7 +11,7 @@ interface Item {
 }
 
 interface ShoppingListProps {
-    onLogout: () => void;
+    onLogout?: () => void;
 }
 
 const ShoppingList: React.FC<ShoppingListProps> = ({ onLogout }) => {
