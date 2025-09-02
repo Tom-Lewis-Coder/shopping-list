@@ -72,6 +72,8 @@ const ShoppingList = () => {
         setItems(reorderedItems);
     };
 
+    const total = items.reduce((acc, item) => acc + item.price, 0);
+
     if (!isLoggedIn) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-300">
@@ -166,6 +168,8 @@ const ShoppingList = () => {
                     )}
                 </Droppable>
             </DragDropContext>
+
+            <p className="mt-4 text-lg font-semibold">Total: £{total.toFixed(2)}</p>
 
             <div className="mt-6 flex flex-col sm:flex-row gap-2 w-full max-w-md">
                 <input
